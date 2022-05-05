@@ -1,0 +1,160 @@
+<?php 
+$sMST = $_POST["MST"];
+$sCTY = $_POST["CTY"];
+$sDC = $_POST["DC"];
+$sGD = $_POST["GD"];
+$sCVU = $_POST["CVU"];
+$sNGAY = $_POST["NGAY"];
+$sTHANG = $_POST["THANG"];
+$sNAM = $_POST["NAM"];
+$sCMND = $_POST["CMND"];
+$sCNGAY = $_POST["CNGAY"];
+$sCTHANG = $_POST["CTHANG"];
+$sCNAM = $_POST["CNAM"];
+$sNCCMND = $_POST["NCCMND"];
+$sGC = $_POST["GC"];
+
+$sCM = "";
+$sGH = "";
+$s1NAM = "";
+$s2NAM = "";
+$s3NAM = "";
+
+if ($sNGAY == ""){
+    $sNGAYt = "......";
+} else {
+    $sNGAYt = $sNGAY;
+}
+
+if ($sTHANG == ""){
+    $sTHANGt = "......";
+} else {
+    $sTHANGt = $sTHANG;
+}
+
+if ($sNAM == ""){
+    $sNAMt = "........";
+} else {
+    $sNAMt = $sNAM;
+}
+
+switch($sGC) {
+    case 1:
+        $DK = "Đăng ký mới";
+        $GC = "1";
+    break;
+    case 2:
+        $DK = "Đăng ký mới";
+        $GC = "2";
+    break;
+    case 3:
+        $DK = "Đăng ký mới";
+        $GC = "3";
+    break;
+    case 4:
+        $DK = "Đăng ký mới";
+        $GC = "4";
+    break;
+    case 5:
+        $DK = "Gia hạn";
+        $GC = "1";
+    break;
+    case 6:
+        $DK = "Gia hạn";
+        $GC = "2";
+    break;
+    case 7:
+        $DK = "Gia hạn";
+        $GC = "3";
+    break;
+    case 8:
+        $DK = "Gia hạn";
+        $GC = "4";
+    break;
+ }
+
+
+
+$template_file_name = 'EasyCA-inputGDK.docx';
+$fileName = "GDK_" . $sMST. ".docx";
+$folder   = "EasyCA";
+$full_path = $folder . '/' . $fileName;
+
+if ($sMST == "") {
+    echo '<script language="javascript">';
+    echo 'alert("Input not found")';
+    echo '</script>';
+    exit;
+} else if ($sCTY == "") {
+    echo '<script language="javascript">';
+    echo 'alert("Input not found")';
+    echo '</script>';
+    exit;
+} else if ($sDC == "") {
+    echo '<script language="javascript">';
+    echo 'alert("Input not found")';
+    echo '</script>';
+    exit;
+} else {
+try
+{
+    if (!file_exists($folder))
+    {
+        mkdir($folder);
+    }       
+         
+    //Copy the Template file to the Result Directory
+    copy($template_file_name, $full_path);
+ 
+    // add calss Zip Archive
+    $zip = new \ZipArchive;
+ 
+    //Docx file is nothing but a zip file. Open this Zip File
+    if($zip->open($full_path) == true)
+    {
+        // In the Open XML Wordprocessing format content is stored.
+        // In the document.xml file located in the word directory.
+         
+        $key_file_name = 'word/document.xml';
+        $message = $zip->getFromName($key_file_name);                
+                     
+        $timestamp = date('d-M-Y H:i:s');
+         
+        // this data Replace the placeholders with actual values
+        $message = str_replace("tokenmst", $sMST,   $message);
+        $message = str_replace("tokencty", $sCTY,   $message);
+        $message = str_replace("tokendc",  $sDC,    $message); 
+        $message = str_replace("tokengd",  $sGD,    $message); 
+        $message = str_replace("tokencvu", $sCVU,   $message);
+
+        $message = str_replace("tngay",    $sNGAYt,  $message); 
+        $message = str_replace("tthang",   $sTHANGt, $message); 
+        $message = str_replace("tnam",     $sNAMt,   $message);
+        $message = str_replace("tokencmnd",$sCMND,  $message);
+        $message = str_replace("cngay",    $sCNGAY,  $message);
+        $message = str_replace("cthang",   $sCTHANG, $message); 
+        $message = str_replace("cnam",     $sCNAM,   $message); 
+        $message = str_replace("capcmnd",  $sNCCMND,$message);      
+
+        $message = str_replace("tokendk", $DK,$message); 
+        $message = str_replace("tokengc", $GC,$message); 
+        //Replace the content with the new content created above.
+        $zip->addFromString($key_file_name, $message);
+        $zip->close();
+        
+        header("Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        header("Content-Disposition: attachment; filename=$full_path");
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+
+        readfile($full_path);
+    }
+}
+catch (Exception $exc) 
+{
+    $error_message =  "Error creating the Word Document";
+    var_dump($exc);
+}
+}
+exit();
+?>
